@@ -1,0 +1,13 @@
+# ── 含真实姓名的明文数据，绝不上传，仅本地保留 ──
+# 明文家谱数据（加密成 family.enc.json 后才发布）
+family.json
+# 家谱数据源草稿（含真名）
+a.md
+# 测试用例中硬编码了真实成员姓名/id
+test/
+
+# macOS / 编辑器
+.DS_Store
+.vscode/
+.idea/
+*.swp

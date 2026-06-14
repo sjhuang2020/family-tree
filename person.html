@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>黄氏家谱 - 人物详情</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <span class="site-title">黄氏家谱</span>
+      <span class="site-subtitle">人物详情</span>
+      <nav class="site-nav">
+        <a href="index.html">家谱树</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wiki-container">
+    <aside class="wiki-infobox" id="person-infobox">
+      <div class="wiki-infobox-title" id="infobox-title">加载中…</div>
+      <div class="wiki-infobox-body">
+        <div class="wiki-infobox-row">
+          <span class="wiki-infobox-label">出生次序</span>
+          <span class="wiki-infobox-value" id="infobox-role">—</span>
+        </div>
+        <div class="wiki-infobox-row">
+          <span class="wiki-infobox-label">性别</span>
+          <span class="wiki-infobox-value" id="infobox-gender">—</span>
+        </div>
+        <div class="wiki-infobox-row">
+          <span class="wiki-infobox-label">辈分</span>
+          <span class="wiki-infobox-value" id="infobox-generation">—</span>
+        </div>
+        <div class="wiki-infobox-row">
+          <span class="wiki-infobox-label">配偶</span>
+          <span class="wiki-infobox-value" id="infobox-spouse">—</span>
+        </div>
+        <div class="wiki-infobox-row">
+          <span class="wiki-infobox-label">父亲</span>
+          <span class="wiki-infobox-value" id="infobox-father">—</span>
+        </div>
+        <div class="wiki-infobox-row">
+          <span class="wiki-infobox-label">子女</span>
+          <span class="wiki-infobox-value" id="infobox-children">—</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="wiki-content">
+      <a href="index.html" class="wiki-back-link">← 返回家谱首页</a>
+      <h1 class="wiki-page-title" id="person-title">加载中…</h1>
+      <div class="wiki-page-subtitle" id="person-subtitle"></div>
+
+      <div class="wiki-section-title">基本信息</div>
+      <p class="wiki-paragraph" id="person-basic">加载中…</p>
+
+      <div class="wiki-section-title">个人简介</div>
+      <p class="wiki-paragraph" id="person-bio">加载中…</p>
+
+      <section class="relation-judge">
+        <div class="relation-judge-title">与其他成员的关系判定</div>
+        <div class="relation-judge-row">
+          <span class="relation-judge-label">当前</span>
+          <span id="currentMemberName" style="font-weight:600;">—</span>
+          <span class="relation-judge-label">相对于</span>
+          <select id="otherMember" class="relation-judge-select"></select>
+          <button id="judgeBtn" class="relation-judge-btn">判定关系</button>
+        </div>
+        <div class="relation-judge-result" id="judgeResult">请选择一位家族成员，点击「判定关系」查看结果。</div>
+        <div class="relation-auto-list">
+          <div class="relation-judge-title" style="font-size:14px;margin-bottom:6px;">与核心成员的关系</div>
+          <div id="autoRelationItem">加载中…</div>
+        </div>
+      </section>
+
+      <div class="wiki-section-title">家族关系</div>
+      <div id="person-relations">
+        <div class="wiki-relation-item" id="relation-parent"></div>
+        <div class="wiki-relation-item" id="relation-spouse"></div>
+        <div class="wiki-relation-item" id="relation-children"></div>
+        <div class="wiki-relation-item" id="relation-siblings"></div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    黄氏家谱 · 静态家谱页面 · 数据维护于 family.json
+  </footer>
+
+  <script src="assets/genealogy.js"></script>
+  <script>
+    const { loadFamily, findMemberById, autoJudgeRelation } = window.Genealogy;
+    const personId = new URLSearchParams(location.search).get('id');
+
+    const link = m => `<a href="person.html?id=${m.id}" class="wiki-relation-link">${m.name}</a>`;
+
+    loadFamily('family.json')
+      .then(({ members }) => {
+        const me = findMemberById(members, personId);
+        if (!me) {
+          document.getElementById('person-title').textContent = '成员不存在';
+          document.getElementById('person-basic').textContent = '未找到该成员，请检查链接。';
+          return;
+        }
+
+        const spouse = me.partnerId ? findMemberById(members, me.partnerId) : null;
+        const father = me.parentId ? findMemberById(members, me.parentId) : null;
+        const children = members.filter(m => m.parentId === me.id);
+        const siblings = members.filter(m =>
+          m.parentId === me.parentId && m.id !== me.id && me.parentId && !m.isSpouse);
+
+        // ---- Infobox ----
+        document.getElementById('infobox-title').textContent = me.name;
+        document.getElementById('infobox-role').textContent = me.relation || '—';
+        document.getElementById('infobox-gender').textContent = me.gender;
+        document.getElementById('infobox-generation').textContent = '第 ' + me.generation + ' 代';
+        document.getElementById('infobox-spouse').innerHTML = spouse ? link(spouse) : '无';
+        document.getElementById('infobox-father').innerHTML = father ? link(father) : '无（始祖）';
+        document.getElementById('infobox-children').innerHTML =
+          children.length ? children.map(link).join('、') : '无';
+
+        // ---- 标题与简介 ----
+        document.getElementById('person-title').textContent = me.name;
+        document.getElementById('person-subtitle').textContent = `黄氏家族 · ${me.relation || ''}`;
+        document.getElementById('currentMemberName').textContent = me.name;
+        document.getElementById('person-basic').textContent =
+          `${me.name}为黄氏家族${me.relation || ''}，性别${me.gender}，` +
+          `出生次序${me.birthOrder || '—'}，属第 ${me.generation} 代。`;
+
+        // ---- 个人简介（family.json 中的 bio 字段，缺省给占位提示）----
+        const bioEl = document.getElementById('person-bio');
+        if (me.bio && me.bio.trim()) {
+          bioEl.textContent = me.bio;
+          bioEl.classList.remove('bio-empty');
+        } else {
+          bioEl.textContent = `暂无简介。可在 family.json 中为「${me.name}」添加 bio 字段填写生平、事迹或备注。`;
+          bioEl.classList.add('bio-empty');
+        }
+
+        // ---- 家族关系 ----
+        document.getElementById('relation-parent').innerHTML =
+          father ? `父亲：${link(father)} <span class="wiki-relation-desc">(${father.relation})</span>` : '父亲：无（家族始祖）';
+        document.getElementById('relation-spouse').innerHTML =
+          spouse ? `配偶：${link(spouse)} <span class="wiki-relation-desc">(${spouse.relation})</span>` : '配偶：无';
+        document.getElementById('relation-children').innerHTML =
+          children.length
+            ? '子女：' + children.map(c => `${link(c)} <span class="wiki-relation-desc">(${c.relation})</span>`).join('、')
+            : '子女：无';
+        document.getElementById('relation-siblings').innerHTML =
+          siblings.length
+            ? '兄弟姐妹：' + siblings.map(s => `${link(s)} <span class="wiki-relation-desc">(${s.relation})</span>`).join('、')
+            : '兄弟姐妹：无';
+
+        // ---- 关系判定下拉 ----
+        const sel = document.getElementById('otherMember');
+        members.forEach(m => { if (m.id !== me.id) sel.add(new Option(m.name, m.id)); });
+        document.getElementById('judgeBtn').addEventListener('click', () => {
+          const otherId = sel.value;
+          const rel = autoJudgeRelation(members, me.id, otherId);
+          const otherName = findMemberById(members, otherId).name;
+          document.getElementById('judgeResult').innerHTML =
+            `${me.name} 相对于 ${otherName} 的关系是：<strong>${rel}</strong>`;
+        });
+
+        // ---- 与核心成员关系 ----
+        const core = ['huangmingzhang', 'huangkeli', 'huangkesheng', 'huangpeixin'];
+        const html = core
+          .map(id => findMemberById(members, id))
+          .filter(m => m && m.id !== me.id)
+          .map(m => `<div class="relation-auto-item">相对于 ${m.name}（${m.relation}）：<strong>${autoJudgeRelation(members, me.id, m.id)}</strong></div>`)
+          .join('');
+        document.getElementById('autoRelationItem').innerHTML = html || '暂无核心成员关系数据';
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('person-title').textContent = '加载失败';
+        document.getElementById('person-basic').textContent = '无法加载 family.json，请检查文件。';
+      });
+  </script>
+</body>
+</html>
